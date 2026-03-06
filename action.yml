@@ -1,0 +1,50 @@
+name: "rbx-convert"
+description: "Convert Roblox XML <-> binary formats (rbxlx <-> rbxl, rbxmx <-> rbxm) using rbx-util"
+
+inputs:
+  input:
+    description: "Path to input file (relative to workspace)"
+    required: true
+  output:
+    description: "Path to output file (relative to workspace)"
+    required: true
+  verbosity:
+    description: "Verbosity flags forwarded to rbx-util (for example: -v or -vv)"
+    required: false
+    default: ""
+  rbx-dom-rev:
+    description: "Git revision (commit SHA or tag) of rbx-dom to build rbx-util from"
+    required: false
+    default: "2bac02a"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache rbx-util binary
+      id: cache-rbx-util
+      uses: actions/cache@v5
+      with:
+        path: ~/.cargo/bin/rbx-util
+        key: rbx-util-${{ inputs.rbx-dom-rev }}-${{ runner.os }}
+
+    - name: Install rbx-util
+      if: steps.cache-rbx-util.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cargo install \
+          --git https://github.com/rojo-rbx/rbx-dom \
+          --rev "${{ inputs.rbx-dom-rev }}" \
+          --path rbx_util \
+          --locked \
+          --force
+
+    - name: Convert file
+      shell: bash
+      run: |
+        rbx-util convert ${{ inputs.verbosity }} \
+          "${{ github.workspace }}/${{ inputs.input }}" \
+          "${{ github.workspace }}/${{ inputs.output }}"
+
+branding:
+  icon: package
+  color: yellow
