@@ -20,23 +20,21 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Cache rbx-util binary
-      id: cache-rbx-util
-      uses: actions/cache@v5
-      with:
-        path: ~/.cargo/bin/rbx-util
-        key: rbx-util-${{ inputs.rbx-dom-rev }}-${{ runner.os }}
-
     - name: Install rbx-util
-      if: steps.cache-rbx-util.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        cargo install \
-          --git https://github.com/rojo-rbx/rbx-dom \
-          --rev "${{ inputs.rbx-dom-rev }}" \
-          --locked \
-          --force \
-          rbx_util
+        mkdir -p ~/.cargo/bin
+        BASE_URL="https://github.com/t7ru/rbx-convert-action/releases/download/binaries-${{ inputs.rbx-dom-rev }}"
+
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          curl -fL "$BASE_URL/rbx-util-windows.exe" -o ~/.cargo/bin/rbx-util.exe
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          curl -fL "$BASE_URL/rbx-util-macos" -o ~/.cargo/bin/rbx-util
+          chmod +x ~/.cargo/bin/rbx-util
+        else
+          curl -fL "$BASE_URL/rbx-util-linux" -o ~/.cargo/bin/rbx-util
+          chmod +x ~/.cargo/bin/rbx-util
+        fi
 
     - name: Convert file
       shell: bash

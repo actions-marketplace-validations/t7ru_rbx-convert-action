@@ -1,0 +1,52 @@
+name: Build Binaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      rev:
+        description: "rbx-dom git revision"
+        required: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: rbx-util-linux
+          - os: windows-latest
+            artifact: rbx-util-windows.exe
+          - os: macos-latest
+            artifact: rbx-util-macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Build rbx-util
+        run: cargo install --git https://github.com/rojo-rbx/rbx-dom --rev "${{ github.event.inputs.rev }}" --locked rbx_util --root ./out
+
+      - name: Rename artifact
+        shell: bash
+        run: mv ./out/bin/rbx-util* ./out/bin/${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v8
+        with:
+          name: ${{ matrix.artifact }}
+          path: ./out/bin/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: binaries
+          merge-multiple: true
+
+      - name: Release binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "binaries-${{ github.event.inputs.rev }}"
+          name: "rbx-util binaries (${{ github.event.inputs.rev }})"
+          files: binaries/*
