@@ -1,6 +1,6 @@
 # rbx-convert-action
 
-Convert Roblox place/model files between XML and binary formats using [`rbx-util`](https://github.com/rojo-rbx/rbx-dom/tree/main/rbx_util).
+Convert Roblox place/model files between XML and binary formats using [`rbx-util`](https://github.com/rojo-rbx/rbx-dom/tree/master/rbx_util).
 
 `.rbxlx` <-> `.rbxl` · `.rbxmx` <-> `.rbxm`
 
